@@ -5,7 +5,7 @@ and image indexer to collect images from various public sources online
 
 ##Requirements
  - Go (https://golang.org/)
- - Go resize (github.com/nfnt/resize)
+ - Go resize (https://github.com/nfnt/resize)
 
 ##Author
 
