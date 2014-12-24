@@ -17,10 +17,11 @@ type Source interface {
 
 func StartCollection(searchTerm string, sources []Source) {
 	var wg sync.WaitGroup
-	//for each source, launch a goroutine to process the images the source returns on it's channel
 	for _, source := range sources {
+		//for each source, also create a channel for saving to the DB
 		out := make(chan Photo)
 		wg.Add(1)
+		//for each source, launch a goroutine to process the images the source returns on it's channel
 		go func(s Source, ch chan Photo) {
 			defer wg.Done()
 			for p := range s.Collect(searchTerm) {
@@ -29,7 +30,7 @@ func StartCollection(searchTerm string, sources []Source) {
 			}
 			close(ch)
 		}(source, out)
-		//for each source, also create a channel for saving to the DB
+		//for each source, launch a goroutine to read a channel and save the processed image to the DB
 		wg.Add(1)
 		go func(ch chan Photo) {
 			defer wg.Done()
