@@ -6,6 +6,13 @@ and image indexer to collect images from various public sources online
 ##Requirements
  - Go (https://golang.org/)
  - Go resize (https://github.com/nfnt/resize)
+ - https://bitbucket.org/liamstask/go-imgur
+ - https://github.com/gedex/go-instagram
+ - https://github.com/manki/flickgo
+ - https://github.com/ChimeraCoder/anaconda
+
+##Usage
+- The project will produce two binaries, **mosaicgen** and **indexer**.  Run **indexer <keyword>** to build a collection of images (based on a keyword) to use as sources for the photomosaic.  Run **mosaicgen /path/to/source/img** to produce the photomosaic.
 
 ##Author
 

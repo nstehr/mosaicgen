@@ -1,15 +1,13 @@
 package imgprocess
 
 import (
-	// "os"
-	// "log"
 	"github.com/nfnt/resize"
 	"image"
 	"image/color"
 )
 
 type Tiler interface {
-	MakeTile(img image.RGBA, sourceImgTile image.Image, tileSize int, x int, y int)
+	MakeTile(img *image.RGBA, sourceImgTile image.Image, tileSize int, x int, y int)
 }
 
 type AvgColorTiler struct{}
@@ -19,7 +17,7 @@ type MosaicTiler struct {
 }
 
 //gets the average colour of the tile, and fills in the whole tile with that average color
-func (avColorTiler AvgColorTiler) MakeTile(img image.RGBA, sourceImgTile image.Image, tileSize int, x int, y int) {
+func (avColorTiler AvgColorTiler) MakeTile(img *image.RGBA, sourceImgTile image.Image, tileSize int, x int, y int) {
 	r, g, b := GetAvgColor(sourceImgTile)
 	c := color.RGBA{r, g, b, 255}
 	for i := x; i < x+tileSize; i++ {
@@ -30,7 +28,7 @@ func (avColorTiler AvgColorTiler) MakeTile(img image.RGBA, sourceImgTile image.I
 }
 
 //based on the explanation by Matt Cutts here: https://www.mattcutts.com/blog/photo-mosaic-effect-with-go/
-func (mcTiler MCTiler) MakeTile(img image.RGBA, sourceImgTile image.Image, tileSize int, x int, y int) {
+func (mcTiler MCTiler) MakeTile(img *image.RGBA, sourceImgTile image.Image, tileSize int, x int, y int) {
 	avgR, avgG, avgB := GetAvgColor(sourceImgTile)
 	//my math and casting and everything here is probably soooo bad and wrong, but it works well
 	//enough for what I need
@@ -50,7 +48,7 @@ func (mcTiler MCTiler) MakeTile(img image.RGBA, sourceImgTile image.Image, tileS
 //start of the tiler that will insert pictures to make a real photomosaic
 //right now just take the source image, and fill in the tiles with the images
 //of itself
-func (mosaicTiler MosaicTiler) MakeTile(img image.RGBA, sourceImgTile image.Image, tileSize int, x int, y int) {
+func (mosaicTiler MosaicTiler) MakeTile(img *image.RGBA, sourceImgTile image.Image, tileSize int, x int, y int) {
 	newImage := resize.Resize(uint(tileSize), uint(tileSize), mosaicTiler.TileImage, resize.NearestNeighbor)
 
 	for i := 0; i < tileSize; i++ {

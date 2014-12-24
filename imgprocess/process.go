@@ -11,7 +11,7 @@ import (
 func GenerateImage(srcImg image.Image, tiler Tiler, tileSize int, outFilename string) {
 	width := srcImg.Bounds().Max.X
 	height := srcImg.Bounds().Max.Y
-
+	//image.NewRGBA returns a *image.RGBA
 	m := image.NewRGBA(image.Rect(0, 0, width, height))
 	outFile, err := os.Create(outFilename)
 	if err != nil {
@@ -32,7 +32,7 @@ func GenerateImage(srcImg image.Image, tiler Tiler, tileSize int, outFilename st
 		for y := srcImg.Bounds().Min.Y; y < srcImg.Bounds().Max.Y; y = y + tileSize {
 			subRect := image.Rect(x, y, x+tileSize, y+tileSize)
 			sub := img.SubImage(subRect)
-			tiler.MakeTile(*m, sub, tileSize, x, y)
+			tiler.MakeTile(m, sub, tileSize, x, y)
 		}
 	}
 
@@ -60,7 +60,7 @@ func GetAvgColor(img image.Image) (uint8, uint8, uint8) {
 	avgRed := sumRed / uint32(count)
 	avgBlue := sumBlue / uint32(count)
 	avgGreen := sumGreen / uint32(count)
-	//probably bad to do this..hahaha
+	//probably bad to do this division by 256, likely a much better way....
 	return uint8(avgRed / 256), uint8(avgGreen / 256), uint8(avgBlue / 256)
 
 }
