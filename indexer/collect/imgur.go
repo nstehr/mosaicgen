@@ -14,7 +14,7 @@ type ImgurClient struct {
 }
 
 const (
-	apiSleepTime = 2 * time.Second
+	imgurAPISleepTime = 2 * time.Second
 )
 
 func (client ImgurClient) Collect(searchTerm string) <-chan db.Photo {
@@ -38,7 +38,7 @@ func (client ImgurClient) getPictures(searchTerm string, ch chan db.Photo) {
 			log.Printf("error retrieving pictures from imgur: %s\n", err)
 			//increase the page number, and try again
 			page++
-			time.Sleep(apiSleepTime)
+			time.Sleep(imgurAPISleepTime)
 			continue
 		}
 		for _, r := range results {
@@ -56,7 +56,7 @@ func (client ImgurClient) getPictures(searchTerm string, ch chan db.Photo) {
 		if len(results) > 0 {
 			page++
 			log.Println("waiting to make next imgur call")
-			time.Sleep(apiSleepTime)
+			time.Sleep(imgurAPISleepTime)
 		} else {
 			moreData = false
 		}

@@ -16,7 +16,7 @@ type FlickrClient struct {
 }
 
 const (
-	apiSleepTime = 1500 * time.Millisecond
+	flickrAPISleepTime = 1500 * time.Millisecond
 )
 
 func (client FlickrClient) Collect(searchTerm string) <-chan db.Photo {
@@ -43,7 +43,7 @@ func (client FlickrClient) getPictures(searchTerm string, ch chan db.Photo) {
 		if err != nil {
 			log.Printf("error retrieving pictures from flickr: %s\n", err)
 			page++
-			time.Sleep(apiSleepTime)
+			time.Sleep(flickrAPISleepTime)
 			continue
 		}
 		for _, photo := range resp.Photos {
@@ -60,7 +60,7 @@ func (client FlickrClient) getPictures(searchTerm string, ch chan db.Photo) {
 		if resp.Page < resp.Pages {
 			page++
 			log.Println("waiting to make next flickr call")
-			time.Sleep(apiSleepTime)
+			time.Sleep(flickrAPISleepTime)
 		} else {
 			moreData = false
 		}

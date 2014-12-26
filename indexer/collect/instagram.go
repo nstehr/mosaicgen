@@ -13,7 +13,7 @@ type InstagramClient struct {
 }
 
 const (
-	apiSleepTime = 1 * time.Second
+	instagramAPISleepTime = 1 * time.Second
 )
 
 func (client InstagramClient) Collect(searchTerm string) <-chan db.Photo {
@@ -57,7 +57,7 @@ func (client InstagramClient) getPictures(searchTerm string, ch chan db.Photo) {
 		if next.NextURL != "" {
 			log.Println("waiting to make next instagram call")
 			p.MaxID = next.NextMaxID
-			time.Sleep(apiSleepTime)
+			time.Sleep(instagramAPISleepTime)
 
 		} else {
 			moreData = false

@@ -17,7 +17,7 @@ type TwitterClient struct {
 }
 
 const (
-	apiSleepTime = 2500 * time.Millisecond
+	twitterAPISleepTime = 2500 * time.Millisecond
 )
 
 func (client TwitterClient) Collect(searchTerm string) <-chan db.Photo {
@@ -71,7 +71,7 @@ func (client TwitterClient) getPictures(searchTerm string, ch chan db.Photo) {
 			//api.SetDelay, but it panics when I use it.  It also
 			//says it will handle rate limit errors, but I feel a bit
 			//safer doing it myself....
-			time.Sleep(apiSleepTime)
+			time.Sleep(twitterAPISleepTime)
 		} else {
 			moreData = false
 		}
