@@ -10,9 +10,14 @@ and image indexer to collect images from various public sources online
  - https://github.com/gedex/go-instagram
  - https://github.com/manki/flickgo
  - https://github.com/ChimeraCoder/anaconda
+ - github.com/lucasb-eyer/go-colorful
 
 ##Usage
 - The project will produce two binaries, **mosaicgen** and **indexer**.  Run **indexer <keyword>** to build a collection of images (based on a keyword) to use as sources for the photomosaic.  Run **mosaicgen /path/to/source/img** to produce the photomosaic.
+
+##TODO
+- Try to make it faster
+- Implement method to use a tile image only once
 
 ##Author
 

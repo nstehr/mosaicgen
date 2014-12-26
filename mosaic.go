@@ -35,6 +35,6 @@ func main() {
 	imgprocess.GenerateImage(srcImg, tiler, 20, "tiled.png")
 	imgprocess.GenerateImage(srcImg, tilerMC, 20, "tiled2.png")
 	start := time.Now()
-	imgprocess.GenerateImage(srcImg, mosaicTiler, 50, "tiled3.png")
+	imgprocess.GenerateImage(srcImg, mosaicTiler, 15, "tiled3.png")
 	log.Println(time.Since(start))
 }

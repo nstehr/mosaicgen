@@ -11,8 +11,8 @@ type MongoDBClient struct {
 }
 
 const (
-	DATABASE   = "photodb"
-	COLLECTION = "photos"
+	database   = "photodb"
+	collection = "photos"
 )
 
 func NewMongoClient(server string) *MongoDBClient {
@@ -32,7 +32,7 @@ func (client *MongoDBClient) SavePhoto(photo *Photo) {
 	sessionCopy := client.session.Copy()
 	defer sessionCopy.Close()
 
-	sessionCopy.DB(DATABASE).C(COLLECTION).Insert(photo)
+	sessionCopy.DB(database).C(collection).Insert(photo)
 }
 
 func (client *MongoDBClient) CloseConnection() {
@@ -44,7 +44,7 @@ func (client *MongoDBClient) GetPhotos(tag string, photos *[]Photo) {
 	if client.session == nil {
 		log.Fatal("connection to database closed!")
 	}
-	err := client.session.DB(DATABASE).C(COLLECTION).Find(bson.M{"tag": tag}).All(photos)
+	err := client.session.DB(database).C(collection).Find(bson.M{"tag": tag}).All(photos)
 	if err != nil {
 		log.Printf("error getting photos : %s\n", err)
 		return

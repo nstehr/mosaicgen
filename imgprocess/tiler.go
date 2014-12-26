@@ -81,13 +81,13 @@ func (mosaicTiler MosaicTiler) findClosestImage(sourceAvgColor colorful.Color) (
 	}
 	resp, err := http.Get(photoUrl)
 	if err != nil {
-		log.Println("Error downloading image from: " + photoUrl)
+		log.Printf("error retrieving picture from %s: %s\n", photoUrl, err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	img, _, err := image.Decode(resp.Body)
 	if err != nil {
-		log.Println("Error decoding image from: " + photoUrl)
+		log.Printf("error decoding picture from %s: %s\n", photoUrl, err)
 		return nil, err
 	}
 	return img, nil
