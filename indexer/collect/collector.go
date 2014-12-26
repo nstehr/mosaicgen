@@ -1,6 +1,7 @@
 package collect
 
 import (
+	"github.com/nstehr/mosaicgen/db"
 	"github.com/nstehr/mosaicgen/imgprocess"
 	"image"
 	"image/color"
@@ -12,17 +13,17 @@ import (
 )
 
 type Source interface {
-	Collect(searchTerm string) <-chan Photo
+	Collect(searchTerm string) <-chan db.Photo
 }
 
-func StartCollection(searchTerm string, sources []Source) {
+func StartCollection(searchTerm string, sources []Source, photoDB db.PhotoDB) {
 	var wg sync.WaitGroup
 	for _, source := range sources {
 		//for each source, also create a channel for saving to the DB
-		out := make(chan Photo)
+		out := make(chan db.Photo)
 		wg.Add(1)
 		//for each source, launch a goroutine to process the images the source returns on it's channel
-		go func(s Source, ch chan Photo) {
+		go func(s Source, ch chan db.Photo) {
 			defer wg.Done()
 			for p := range s.Collect(searchTerm) {
 				processPhoto(&p)
@@ -32,10 +33,10 @@ func StartCollection(searchTerm string, sources []Source) {
 		}(source, out)
 		//for each source, launch a goroutine to read a channel and save the processed image to the DB
 		wg.Add(1)
-		go func(ch chan Photo) {
+		go func(ch chan db.Photo) {
 			defer wg.Done()
 			for p := range ch {
-				persistPhoto(&p)
+				persistPhoto(&p, photoDB)
 			}
 		}(out)
 	}
@@ -44,7 +45,7 @@ func StartCollection(searchTerm string, sources []Source) {
 	wg.Wait()
 }
 
-func processPhoto(photo *Photo) {
+func processPhoto(photo *db.Photo) {
 	var url string
 	//use the thumb/small image for processing
 	//if available
@@ -70,6 +71,6 @@ func processPhoto(photo *Photo) {
 
 }
 
-func persistPhoto(photo *Photo) {
-	log.Println("persisting: " + photo.Url)
+func persistPhoto(photo *db.Photo, photoDB db.PhotoDB) {
+	photoDB.SavePhoto(photo)
 }

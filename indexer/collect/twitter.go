@@ -2,6 +2,7 @@ package collect
 
 import (
 	"github.com/ChimeraCoder/anaconda"
+	"github.com/nstehr/mosaicgen/db"
 	"log"
 	"net/url"
 	"time"
@@ -15,9 +16,9 @@ type TwitterClient struct {
 	api               *anaconda.TwitterApi
 }
 
-func (client TwitterClient) Collect(searchTerm string) <-chan Photo {
+func (client TwitterClient) Collect(searchTerm string) <-chan db.Photo {
 
-	out := make(chan Photo)
+	out := make(chan db.Photo)
 
 	anaconda.SetConsumerKey(client.ConsumerKey)
 	anaconda.SetConsumerSecret(client.ConsumerSecret)
@@ -27,7 +28,8 @@ func (client TwitterClient) Collect(searchTerm string) <-chan Photo {
 	return out
 }
 
-func (client TwitterClient) getPictures(searchTerm string, ch chan Photo) {
+func (client TwitterClient) getPictures(searchTerm string, ch chan db.Photo) {
+	defer close(ch)
 	moreData := true
 	v := url.Values{}
 	maxId := int64(0)
@@ -35,13 +37,13 @@ func (client TwitterClient) getPictures(searchTerm string, ch chan Photo) {
 	for moreData {
 		results, err := client.api.GetSearch(searchTerm, v)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("error retrieving pictures from twitter: %s\n", err)
 		}
 		for _, tweet := range results {
 			if len(tweet.Entities.Media) > 0 {
 				for _, media := range tweet.Entities.Media {
 					if media.Type == "photo" {
-						ph := Photo{}
+						ph := db.Photo{}
 						ph.Source = "twitter"
 						ph.Url = media.Media_url
 						ph.Tag = searchTerm
@@ -70,6 +72,4 @@ func (client TwitterClient) getPictures(searchTerm string, ch chan Photo) {
 			moreData = false
 		}
 	}
-
-	close(ch)
 }

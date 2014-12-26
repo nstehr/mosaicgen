@@ -1,4 +1,4 @@
-package collect
+package db
 
 import (
 	"image/color"

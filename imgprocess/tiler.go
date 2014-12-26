@@ -1,9 +1,14 @@
 package imgprocess
 
 import (
+	"github.com/lucasb-eyer/go-colorful"
 	"github.com/nfnt/resize"
+	"github.com/nstehr/mosaicgen/db"
 	"image"
 	"image/color"
+	"image/draw"
+	"log"
+	"net/http"
 )
 
 type Tiler interface {
@@ -14,17 +19,15 @@ type AvgColorTiler struct{}
 type MCTiler struct{}
 type MosaicTiler struct {
 	TileImage image.Image
+	DB        db.PhotoDB
+	Keyword   string
 }
 
 //gets the average colour of the tile, and fills in the whole tile with that average color
 func (avColorTiler AvgColorTiler) MakeTile(img *image.RGBA, sourceImgTile image.Image, tileSize int, x int, y int) {
 	r, g, b := GetAvgColor(sourceImgTile)
 	c := color.RGBA{r, g, b, 255}
-	for i := x; i < x+tileSize; i++ {
-		for j := y; j < y+tileSize; j++ {
-			img.Set(i, j, c)
-		}
-	}
+	draw.Draw(img, image.Rect(x, y, x+tileSize, y+tileSize), &image.Uniform{c}, image.ZP, draw.Src)
 }
 
 //based on the explanation by Matt Cutts here: https://www.mattcutts.com/blog/photo-mosaic-effect-with-go/
@@ -45,18 +48,47 @@ func (mcTiler MCTiler) MakeTile(img *image.RGBA, sourceImgTile image.Image, tile
 	}
 }
 
-//start of the tiler that will insert pictures to make a real photomosaic
-//right now just take the source image, and fill in the tiles with the images
-//of itself
 func (mosaicTiler MosaicTiler) MakeTile(img *image.RGBA, sourceImgTile image.Image, tileSize int, x int, y int) {
-	newImage := resize.Resize(uint(tileSize), uint(tileSize), mosaicTiler.TileImage, resize.NearestNeighbor)
 
-	for i := 0; i < tileSize; i++ {
-		for j := 0; j < tileSize; j++ {
-			r, g, b, _ := newImage.At(i, j).RGBA()
-			c := color.RGBA{uint8(r / 256), uint8(g / 256), uint8(b / 256), 255}
-			img.Set(x+i, y+j, c)
+	aR, aG, aB := GetAvgColor(sourceImgTile)
+	cf := colorful.Color{float64(aR) / 255.0, float64(aG) / 255.0, float64(aB) / 255.0}
+	tileImage, err := mosaicTiler.findClosestImage(cf)
+	if err != nil {
+		log.Fatal("Error locating matching image")
+	}
+	newImage := resize.Resize(uint(tileSize), uint(tileSize), tileImage, resize.NearestNeighbor)
+	draw.Draw(img, image.Rect(x, y, x+tileSize, y+tileSize), newImage, image.ZP, draw.Src)
+
+}
+
+func (mosaicTiler MosaicTiler) findClosestImage(sourceAvgColor colorful.Color) (image.Image, error) {
+	var photos []db.Photo
+	minDistance := 1.0
+	photoUrl := ""
+	mosaicTiler.DB.GetPhotos(mosaicTiler.Keyword, &photos)
+
+	for _, photo := range photos {
+		c := colorful.Color{float64(photo.AvgColor.R) / 255.0, float64(photo.AvgColor.G) / 255.0, float64(photo.AvgColor.B) / 255.0}
+		distance := sourceAvgColor.DistanceCIE94(c)
+		if distance < minDistance {
+			minDistance = distance
+			if photo.ThumbUrl != "" {
+				photoUrl = photo.ThumbUrl
+			} else {
+				photoUrl = photo.Url
+			}
 		}
 	}
-
+	resp, err := http.Get(photoUrl)
+	if err != nil {
+		log.Println("Error downloading image from: " + photoUrl)
+		return nil, err
+	}
+	defer resp.Body.Close()
+	img, _, err := image.Decode(resp.Body)
+	if err != nil {
+		log.Println("Error decoding image from: " + photoUrl)
+		return nil, err
+	}
+	return img, nil
 }

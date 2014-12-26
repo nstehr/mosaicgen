@@ -2,6 +2,7 @@ package collect
 
 import (
 	"github.com/manki/flickgo"
+	"github.com/nstehr/mosaicgen/db"
 	"log"
 	"net/http"
 	"strconv"
@@ -14,9 +15,9 @@ type FlickrClient struct {
 	api    *flickgo.Client
 }
 
-func (client FlickrClient) Collect(searchTerm string) <-chan Photo {
+func (client FlickrClient) Collect(searchTerm string) <-chan db.Photo {
 
-	out := make(chan Photo)
+	out := make(chan db.Photo)
 	flickrClient := flickgo.New(client.Key, client.Secret, http.DefaultClient)
 
 	client.api = flickrClient
@@ -26,7 +27,8 @@ func (client FlickrClient) Collect(searchTerm string) <-chan Photo {
 	return out
 }
 
-func (client FlickrClient) getPictures(searchTerm string, ch chan Photo) {
+func (client FlickrClient) getPictures(searchTerm string, ch chan db.Photo) {
+	defer close(ch)
 	flickrArgs := make(map[string]string)
 	flickrArgs["tags"] = searchTerm
 	page := 1
@@ -35,10 +37,13 @@ func (client FlickrClient) getPictures(searchTerm string, ch chan Photo) {
 		flickrArgs["page"] = strconv.Itoa(page)
 		resp, err := client.api.Search(flickrArgs)
 		if err != nil {
-			log.Fatal("error retrieving picture from flickr")
+			log.Printf("error retrieving pictures from flickr: %s\n", err)
+			page++
+			time.Sleep(1500 * time.Millisecond)
+			continue
 		}
 		for _, photo := range resp.Photos {
-			ph := Photo{}
+			ph := db.Photo{}
 			//what size should I use?
 			ph.ThumbUrl = photo.URL(flickgo.SizeSmallSquare)
 			ph.Url = photo.URL(flickgo.SizeMedium500)
@@ -56,5 +61,4 @@ func (client FlickrClient) getPictures(searchTerm string, ch chan Photo) {
 			moreData = false
 		}
 	}
-	close(ch)
 }

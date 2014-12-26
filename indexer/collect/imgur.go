@@ -2,6 +2,7 @@ package collect
 
 import (
 	"bitbucket.org/liamstask/go-imgur/imgur"
+	"github.com/nstehr/mosaicgen/db"
 	"log"
 	"time"
 )
@@ -12,9 +13,9 @@ type ImgurClient struct {
 	api          *imgur.Client
 }
 
-func (client ImgurClient) Collect(searchTerm string) <-chan Photo {
+func (client ImgurClient) Collect(searchTerm string) <-chan db.Photo {
 
-	out := make(chan Photo)
+	out := make(chan db.Photo)
 
 	imgurClient := imgur.NewClient(nil, client.ClientID, client.ClientSecret)
 	client.api = imgurClient
@@ -23,18 +24,22 @@ func (client ImgurClient) Collect(searchTerm string) <-chan Photo {
 	return out
 }
 
-func (client ImgurClient) getPictures(searchTerm string, ch chan Photo) {
-
+func (client ImgurClient) getPictures(searchTerm string, ch chan db.Photo) {
+	defer close(ch)
 	moreData := true
 	page := 1
 	for moreData {
 		results, err := client.api.Gallery.Search(searchTerm, "time", page)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("error retrieving pictures from imgur: %s\n", err)
+			//increase the page number, and try again
+			page++
+			time.Sleep(2 * time.Second)
+			continue
 		}
 		for _, r := range results {
 			if !r.IsAlbum && !r.Animated {
-				ph := Photo{}
+				ph := db.Photo{}
 				ph.Source = "imgur"
 				ph.Tag = searchTerm
 				ph.Text = r.Description
@@ -53,5 +58,4 @@ func (client ImgurClient) getPictures(searchTerm string, ch chan Photo) {
 		}
 	}
 
-	close(ch)
 }
