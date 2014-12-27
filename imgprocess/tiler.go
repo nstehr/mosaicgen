@@ -19,7 +19,7 @@ type AvgColorTiler struct{}
 type MCTiler struct{}
 type MosaicTiler struct {
 	TileImage image.Image
-	DB        db.PhotoDB
+	Photos    *[]db.Photo
 	Keyword   string
 }
 
@@ -62,10 +62,11 @@ func (mosaicTiler MosaicTiler) MakeTile(img *image.RGBA, sourceImgTile image.Ima
 }
 
 func (mosaicTiler MosaicTiler) findClosestImage(sourceAvgColor colorful.Color) (image.Image, error) {
-	var photos []db.Photo
+
 	minDistance := 1.0
 	photoUrl := ""
-	mosaicTiler.DB.GetPhotos(mosaicTiler.Keyword, &photos)
+
+	photos := *mosaicTiler.Photos
 
 	for _, photo := range photos {
 		c := colorful.Color{float64(photo.AvgColor.R) / 255.0, float64(photo.AvgColor.G) / 255.0, float64(photo.AvgColor.B) / 255.0}

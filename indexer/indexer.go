@@ -5,6 +5,7 @@ import (
 	"github.com/nstehr/mosaicgen/indexer/collect"
 	"log"
 	"os"
+	"runtime"
 )
 
 const (
@@ -26,7 +27,11 @@ func main() {
 	}
 	keyword := os.Args[1]
 
-	dbClient := db.NewMongoClient("localhost")
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	//dbClient := db.NewMongoClient("localhost")
+	//dbClient := db.NewGDatastoreClientFromJSON("", "")
+	//dbClient := db.NewGDatastoreClientForComputeEngine("")
 	defer dbClient.CloseConnection()
 
 	instagramClient := collect.InstagramClient{ClientID: instagramClientID}

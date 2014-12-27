@@ -23,3 +23,7 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
+mosaicgen_*
+indexer_*
+gcloud_cmds.txt

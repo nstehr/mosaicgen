@@ -12,10 +12,12 @@ import (
 )
 
 func main() {
-	if len(os.Args) <= 1 {
-		log.Fatal("not enough args, please pass in source file")
+	if len(os.Args) <= 2 {
+		log.Fatal("not enough args, please pass in source file and keyword")
 	}
 	sourceFile := os.Args[1]
+	keyword := os.Args[2]
+
 	in, err := os.Open(sourceFile)
 	if err != nil {
 		log.Fatal(err)
@@ -25,12 +27,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	dbClient := db.NewMongoClient("localhost")
+	//dbClient := db.NewMongoClient("localhost")
+	//dbClient := db.NewGDatastoreClientFromJSON("", "")
 	defer dbClient.CloseConnection()
 
 	tiler := imgprocess.AvgColorTiler{}
 	tilerMC := imgprocess.MCTiler{}
-	mosaicTiler := imgprocess.MosaicTiler{TileImage: srcImg, Keyword: "snowman", DB: dbClient}
+
+	var photos []db.Photo
+	dbClient.GetPhotos(keyword, &photos)
+
+	mosaicTiler := imgprocess.MosaicTiler{TileImage: srcImg, Keyword: keyword, Photos: &photos}
 
 	imgprocess.GenerateImage(srcImg, tiler, 20, "tiled.png")
 	imgprocess.GenerateImage(srcImg, tilerMC, 20, "tiled2.png")
