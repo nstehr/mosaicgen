@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/nstehr/mosaicgen/db"
 	"github.com/nstehr/mosaicgen/imgprocess"
 	"image"
@@ -10,6 +11,13 @@ import (
 	"os"
 	"time"
 )
+
+type MosaicMetadata struct {
+	Tiles    map[string]imgprocess.Tile
+	Height   int
+	Width    int
+	TileSize int
+}
 
 func main() {
 	if len(os.Args) <= 2 {
@@ -35,13 +43,23 @@ func main() {
 	tilerMC := imgprocess.MCTiler{}
 
 	var photos []db.Photo
+
 	dbClient.GetPhotos(keyword, &photos)
 
-	mosaicTiler := imgprocess.MosaicTiler{TileImage: srcImg, Keyword: keyword, Photos: &photos}
+	mosaicTiler := imgprocess.NewMosaicTiler(&photos)
 
 	imgprocess.GenerateImage(srcImg, tiler, 20, "tiled.png")
 	imgprocess.GenerateImage(srcImg, tilerMC, 20, "tiled2.png")
 	start := time.Now()
 	imgprocess.GenerateImage(srcImg, mosaicTiler, 15, "tiled3.png")
 	log.Println(time.Since(start))
+	//generate some metadata about the mosaic
+	metadata := MosaicMetadata{Width: srcImg.Bounds().Max.X, Height: srcImg.Bounds().Max.Y, TileSize: 15, Tiles: mosaicTiler.GetTiles()}
+	metadataJson, _ := json.MarshalIndent(metadata, "", "    ")
+	f, err := os.Create("mosaic.json")
+	if err != nil {
+		log.Fatal("error creating file for mosaic metadata")
+	}
+	defer f.Close()
+	f.Write(metadataJson)
 }

@@ -9,18 +9,23 @@ import (
 	"image/draw"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type Tiler interface {
 	MakeTile(img *image.RGBA, sourceImgTile image.Image, tileSize int, x int, y int)
 }
 
+type Tile struct {
+	Photo    db.Photo
+	Position image.Point
+}
+
 type AvgColorTiler struct{}
 type MCTiler struct{}
 type MosaicTiler struct {
-	TileImage image.Image
-	Photos    *[]db.Photo
-	Keyword   string
+	tiles  map[string]Tile
+	photos *[]db.Photo
 }
 
 //gets the average colour of the tile, and fills in the whole tile with that average color
@@ -48,31 +53,44 @@ func (mcTiler MCTiler) MakeTile(img *image.RGBA, sourceImgTile image.Image, tile
 	}
 }
 
-func (mosaicTiler MosaicTiler) MakeTile(img *image.RGBA, sourceImgTile image.Image, tileSize int, x int, y int) {
+func NewMosaicTiler(sourcePhotos *[]db.Photo) *MosaicTiler {
+	tiles := make(map[string]Tile)
+	return &MosaicTiler{tiles: tiles, photos: sourcePhotos}
+}
+
+func (mosaicTiler *MosaicTiler) MakeTile(img *image.RGBA, sourceImgTile image.Image, tileSize int, x int, y int) {
 
 	aR, aG, aB := GetAvgColor(sourceImgTile)
 	cf := colorful.Color{float64(aR) / 255.0, float64(aG) / 255.0, float64(aB) / 255.0}
-	tileImage, err := mosaicTiler.findClosestImage(cf)
+	matchedPhoto, tileImage, err := mosaicTiler.findClosestImage(cf)
 	if err != nil {
 		log.Fatal("Error locating matching image")
 	}
+	normalizedX := x / tileSize
+	normalizedY := y / tileSize
+	//this key will change when I implement the functionality to use an image only once
+	//the key will become the URL
+	key := strconv.Itoa(normalizedX) + "," + strconv.Itoa(normalizedY)
+	mosaicTiler.tiles[key] = Tile{Photo: matchedPhoto, Position: image.Point{X: normalizedX, Y: normalizedY}}
 	newImage := resize.Resize(uint(tileSize), uint(tileSize), tileImage, resize.NearestNeighbor)
 	draw.Draw(img, image.Rect(x, y, x+tileSize, y+tileSize), newImage, image.ZP, draw.Src)
 
 }
 
-func (mosaicTiler MosaicTiler) findClosestImage(sourceAvgColor colorful.Color) (image.Image, error) {
+func (mosaicTiler *MosaicTiler) findClosestImage(sourceAvgColor colorful.Color) (db.Photo, image.Image, error) {
 
 	minDistance := 1.0
 	photoUrl := ""
+	var matchedPhoto db.Photo
 
-	photos := *mosaicTiler.Photos
+	photos := *mosaicTiler.photos
 
 	for _, photo := range photos {
 		c := colorful.Color{float64(photo.AvgColor.R) / 255.0, float64(photo.AvgColor.G) / 255.0, float64(photo.AvgColor.B) / 255.0}
 		distance := sourceAvgColor.DistanceCIE94(c)
 		if distance < minDistance {
 			minDistance = distance
+			matchedPhoto = photo
 			if photo.ThumbUrl != "" {
 				photoUrl = photo.ThumbUrl
 			} else {
@@ -83,13 +101,19 @@ func (mosaicTiler MosaicTiler) findClosestImage(sourceAvgColor colorful.Color) (
 	resp, err := http.Get(photoUrl)
 	if err != nil {
 		log.Printf("error retrieving picture from %s: %s\n", photoUrl, err)
-		return nil, err
+		return matchedPhoto, nil, err
 	}
 	defer resp.Body.Close()
 	img, _, err := image.Decode(resp.Body)
 	if err != nil {
 		log.Printf("error decoding picture from %s: %s\n", photoUrl, err)
-		return nil, err
+		return matchedPhoto, nil, err
 	}
-	return img, nil
+	return matchedPhoto, img, nil
+}
+
+func (mosaicTiler *MosaicTiler) GetTiles() map[string]Tile {
+	//this will get more implementation when I implement the functionality
+	//to use an image only once
+	return mosaicTiler.tiles
 }

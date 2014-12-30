@@ -1,0 +1,16 @@
+#mosaicLinks li
+{
+display: inline;
+list-style-type: none;
+padding-right: 20px;
+}
+
+.container {
+  display: -webkit-flex;
+  display: flex;
+}
+
+.flex-column {
+  -webkit-flex: 1;
+          flex: 1;
+}
