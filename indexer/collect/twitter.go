@@ -4,7 +4,9 @@ import (
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/nstehr/mosaicgen/db"
 	"log"
+	"math"
 	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -36,8 +38,7 @@ func (client TwitterClient) getPictures(searchTerm string, ch chan db.Photo) {
 	defer close(ch)
 	moreData := true
 	v := url.Values{}
-	maxId := int64(0)
-	maxIdStr := ""
+	minIdProcessed := int64(math.MaxInt64)
 	for moreData {
 		results, err := client.api.GetSearch(searchTerm, v)
 		if err != nil {
@@ -59,14 +60,13 @@ func (client TwitterClient) getPictures(searchTerm string, ch chan db.Photo) {
 				}
 
 			}
-			if tweet.Id > maxId {
-				maxId = tweet.Id
-				maxIdStr = tweet.IdStr
+			if tweet.Id < minIdProcessed {
+				minIdProcessed = tweet.Id
 			}
 		}
 		if len(results) > 0 {
 			log.Println("waiting to make next twitter call")
-			v.Set("since_id", maxIdStr)
+			v.Set("max_id", strconv.FormatInt(minIdProcessed-int64(1), 10))
 			//the anaconda api lib says it supports a delay via
 			//api.SetDelay, but it panics when I use it.  It also
 			//says it will handle rate limit errors, but I feel a bit
