@@ -25,7 +25,7 @@ type AvgColorTiler struct{}
 type MCTiler struct{}
 type MosaicTiler struct {
 	tiles  map[string]Tile
-	photos *[]db.Photo
+	photos *[]db.Photo //not sure if this needs to be a pointer, since it is a slice?
 }
 
 //gets the average colour of the tile, and fills in the whole tile with that average color

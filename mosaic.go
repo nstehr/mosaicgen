@@ -9,6 +9,7 @@ import (
 	_ "image/png"
 	"log"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -20,11 +21,16 @@ type MosaicMetadata struct {
 }
 
 func main() {
-	if len(os.Args) <= 2 {
-		log.Fatal("not enough args, please pass in source file and keyword")
+	if len(os.Args) <= 3 {
+		log.Fatal("not enough args, please pass in source file, keyword, and tile size")
 	}
 	sourceFile := os.Args[1]
 	keyword := os.Args[2]
+	tileSize, err := strconv.Atoi(os.Args[3])
+
+	if err != nil {
+		log.Fatal("Error parsing tile size")
+	}
 
 	in, err := os.Open(sourceFile)
 	if err != nil {
@@ -51,10 +57,10 @@ func main() {
 	imgprocess.GenerateImage(srcImg, tiler, 20, "tiled.png")
 	imgprocess.GenerateImage(srcImg, tilerMC, 20, "tiled2.png")
 	start := time.Now()
-	imgprocess.GenerateImage(srcImg, mosaicTiler, 10, "tiled3.png")
+	imgprocess.GenerateImage(srcImg, mosaicTiler, tileSize, "tiled3.png")
 	log.Println(time.Since(start))
 	//generate some metadata about the mosaic
-	metadata := MosaicMetadata{Width: srcImg.Bounds().Max.X, Height: srcImg.Bounds().Max.Y, TileSize: 10, Tiles: mosaicTiler.Tiles()}
+	metadata := MosaicMetadata{Width: srcImg.Bounds().Max.X, Height: srcImg.Bounds().Max.Y, TileSize: tileSize, Tiles: mosaicTiler.Tiles()}
 	metadataJson, _ := json.MarshalIndent(metadata, "", "    ")
 	f, err := os.Create("mosaic.json")
 	if err != nil {
