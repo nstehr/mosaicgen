@@ -8,6 +8,9 @@ var mosaics = [{
     "file": "json/goal_cheer.json",
     "name": "Goal Cheer"
 }, {
+    "file": "json/tj_oshie.json",
+    "name": "TJ Oshie Olympic SO"
+}, {
     "file": "json/snowman.json",
     "name": "Snowman"
 }]
