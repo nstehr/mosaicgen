@@ -25,7 +25,7 @@ type AvgColorTiler struct{}
 type MCTiler struct{}
 type MosaicTiler struct {
 	tiles  map[string]Tile
-	photos *[]db.Photo //not sure if this needs to be a pointer, since it is a slice?
+	photos []db.Photo //not sure if this needs to be a pointer, since it is a slice?
 }
 
 //gets the average colour of the tile, and fills in the whole tile with that average color
@@ -53,7 +53,7 @@ func (mcTiler MCTiler) MakeTile(img *image.RGBA, sourceImgTile image.Image, tile
 	}
 }
 
-func NewMosaicTiler(sourcePhotos *[]db.Photo) *MosaicTiler {
+func NewMosaicTiler(sourcePhotos []db.Photo) *MosaicTiler {
 	tiles := make(map[string]Tile)
 	return &MosaicTiler{tiles: tiles, photos: sourcePhotos}
 }
@@ -83,7 +83,7 @@ func (mosaicTiler *MosaicTiler) findClosestImage(sourceAvgColor colorful.Color) 
 	photoUrl := ""
 	var matchedPhoto db.Photo
 
-	photos := *mosaicTiler.photos
+	photos := mosaicTiler.photos
 
 	for _, photo := range photos {
 		c := colorful.Color{float64(photo.AvgColor.R) / 255.0, float64(photo.AvgColor.G) / 255.0, float64(photo.AvgColor.B) / 255.0}

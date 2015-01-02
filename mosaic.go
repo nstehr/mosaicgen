@@ -52,7 +52,7 @@ func main() {
 
 	dbClient.GetPhotos(keyword, &photos)
 
-	mosaicTiler := imgprocess.NewMosaicTiler(&photos)
+	mosaicTiler := imgprocess.NewMosaicTiler(photos)
 
 	imgprocess.GenerateImage(srcImg, tiler, 20, "tiled.png")
 	imgprocess.GenerateImage(srcImg, tilerMC, 20, "tiled2.png")
