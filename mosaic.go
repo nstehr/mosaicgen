@@ -51,10 +51,10 @@ func main() {
 	imgprocess.GenerateImage(srcImg, tiler, 20, "tiled.png")
 	imgprocess.GenerateImage(srcImg, tilerMC, 20, "tiled2.png")
 	start := time.Now()
-	imgprocess.GenerateImage(srcImg, mosaicTiler, 15, "tiled3.png")
+	imgprocess.GenerateImage(srcImg, mosaicTiler, 10, "tiled3.png")
 	log.Println(time.Since(start))
 	//generate some metadata about the mosaic
-	metadata := MosaicMetadata{Width: srcImg.Bounds().Max.X, Height: srcImg.Bounds().Max.Y, TileSize: 15, Tiles: mosaicTiler.GetTiles()}
+	metadata := MosaicMetadata{Width: srcImg.Bounds().Max.X, Height: srcImg.Bounds().Max.Y, TileSize: 10, Tiles: mosaicTiler.Tiles()}
 	metadataJson, _ := json.MarshalIndent(metadata, "", "    ")
 	f, err := os.Create("mosaic.json")
 	if err != nil {

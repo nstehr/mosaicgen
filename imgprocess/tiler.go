@@ -112,7 +112,7 @@ func (mosaicTiler *MosaicTiler) findClosestImage(sourceAvgColor colorful.Color) 
 	return matchedPhoto, img, nil
 }
 
-func (mosaicTiler *MosaicTiler) GetTiles() map[string]Tile {
+func (mosaicTiler *MosaicTiler) Tiles() map[string]Tile {
 	//this will get more implementation when I implement the functionality
 	//to use an image only once
 	return mosaicTiler.tiles
