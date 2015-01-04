@@ -1,3 +1,12 @@
+body {
+	font-family: 'Roboto', sans-serif;
+	background-color: #F4F4F4;
+}
+
+button {
+	font-family: 'Roboto', sans-serif;
+}
+
 #mosaicLinks li
 {
 display: inline;
@@ -5,12 +14,33 @@ list-style-type: none;
 padding-right: 20px;
 }
 
-.container {
-  display: -webkit-flex;
-  display: flex;
+.content {
+ display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.flex-column {
-  -webkit-flex: 1;
-          flex: 1;
+#canvas {
+	padding-bottom: 5px;
+}
+
+.mosaic {
+ -webkit-box-flex: 0;
+ -webkit-flex: none;
+ -ms-flex: none;
+ flex: none;
+ max-width: 100%;
+}
+
+.white-popup {
+  position: relative;
+  background: #FFF;
+  padding: 20px;
+  width: auto;
+  max-width: 500px;
+  margin: 20px auto;
+}
+
+#tileExpanded img {
+	max-width: 500px;
 }

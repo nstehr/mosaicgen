@@ -1,24 +1,29 @@
 <html>
 <head>
 <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+<script src="magnific/jquery.magnific-popup.js"></script>
 <script type="text/javascript" src="image.js"></script>
-<link   type="text/css" rel="stylesheet" href="style.css">
+<link href='http://fonts.googleapis.com/css?family=Roboto:400,300' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" href="magnific/magnific-popup.css"> 
+<link type="text/css" rel="stylesheet" href="style.css">
 </head>
 <body>
 <div>
 <ul id="mosaicLinks"></ul>
 </div>
-<div class="container">
-	<div id="imgArea" class="flex-column">
-		<canvas id="canvas"></canvas><br>
+<div class="content">
+	<div id="imgArea" class="mosaic">
+		<canvas id="canvas"></canvas>
+		<div>
 		<button id="fade">Mosaic-ify</button>
+		</div>
 	</div>
-	<div id="tileExpanded" class="flex-column">
+</div>
+	<div id="tileExpanded" class="white-popup mfp-hide">
 		<img id="tileImg"/>
 		<div>
 		<span id="tileImgText"></span>
 		</div>
 	</div>
-</div>
 </body>
 </html>

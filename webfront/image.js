@@ -106,8 +106,17 @@ function setupMosaic(photo) {
         var newX = Math.floor(coords.x / tileSize);
         var newY = Math.floor(coords.y / tileSize);
         var pos = newX + "," + newY;
+
+
         $("#tileImg").attr("src", photo.Tiles[pos].Photo.Url);
         $("#tileImgText").text(photo.Tiles[pos].Photo.Text);
+
+        $.magnificPopup.open({
+            items: {
+                src: '#tileExpanded', // can be a HTML string, jQuery object, or CSS selector
+                type: 'inline'
+            }
+        });
 
     });
 
