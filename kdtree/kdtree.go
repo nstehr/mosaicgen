@@ -1,11 +1,10 @@
 package kdtree
 
 import (
+	"github.com/lucasb-eyer/go-colorful"
 	"github.com/nstehr/mosaicgen/db"
 	"math"
-	"math/rand"
 	"sort"
-	"time"
 )
 
 const (
@@ -21,21 +20,19 @@ type Node struct {
 	rightNode *Node
 }
 
-type sample struct {
-	photo   *db.Photo
-	origIdx int
-}
-
-type sortByRed []sample
-type sortByGreen []sample
-type sortByBlue []sample
+type sortByRed []db.Photo
+type sortByGreen []db.Photo
+type sortByBlue []db.Photo
 
 func (slice sortByRed) Len() int {
 	return len(slice)
 }
 
 func (slice sortByRed) Less(i, j int) bool {
-	return slice[i].photo.AvgColor.R < slice[j].photo.AvgColor.R
+	pureRed := colorful.Color{1.0, 0.0, 0.0}
+	ci := colorful.Color{float64(slice[i].AvgColor.R) / 255.0, 0.0, 0.0}
+	cj := colorful.Color{float64(slice[j].AvgColor.R) / 255.0, 0.0, 0.0}
+	return ci.DistanceCIE94(pureRed) > cj.DistanceCIE94(pureRed)
 }
 
 func (slice sortByRed) Swap(i, j int) {
@@ -47,7 +44,10 @@ func (slice sortByGreen) Len() int {
 }
 
 func (slice sortByGreen) Less(i, j int) bool {
-	return slice[i].photo.AvgColor.G < slice[j].photo.AvgColor.G
+	pureGreen := colorful.Color{0.0, 1.0, 0.0}
+	ci := colorful.Color{0.0, float64(slice[i].AvgColor.G) / 255.0, 0.0}
+	cj := colorful.Color{0.0, float64(slice[j].AvgColor.G) / 255.0, 0.0}
+	return ci.DistanceCIE94(pureGreen) > cj.DistanceCIE94(pureGreen)
 }
 
 func (slice sortByGreen) Swap(i, j int) {
@@ -59,7 +59,10 @@ func (slice sortByBlue) Len() int {
 }
 
 func (slice sortByBlue) Less(i, j int) bool {
-	return slice[i].photo.AvgColor.B < slice[j].photo.AvgColor.B
+	pureBlue := colorful.Color{0.0, 0.0, 1.0}
+	ci := colorful.Color{0.0, 0.0, float64(slice[i].AvgColor.B) / 255.0}
+	cj := colorful.Color{0.0, 0.0, float64(slice[j].AvgColor.B) / 255.0}
+	return ci.DistanceCIE94(pureBlue) > cj.DistanceCIE94(pureBlue)
 }
 
 func (slice sortByBlue) Swap(i, j int) {
@@ -70,6 +73,60 @@ func NewTree(photos []db.Photo) *Node {
 	return createNode(photos, 0)
 }
 
+func (node *Node) NearestNeighbour(target colorful.Color) db.Photo {
+	var match db.Photo
+	bestDistance := 1.0
+	nearestNeighborSearch(node, 0, target, &match, &bestDistance)
+	return match
+}
+
+func nearestNeighborSearch(node *Node, depth int, target colorful.Color, match *db.Photo, bestDistance *float64) {
+	if node == nil {
+		return
+	}
+	cc := colorful.Color{float64(node.Photo.AvgColor.R) / 255.0, float64(node.Photo.AvgColor.G) / 255.0, float64(node.Photo.AvgColor.B) / 255.0}
+	
+	distance := cc.DistanceCIE94(target)
+
+	if distance < *bestDistance {
+		bestDistance = &distance
+		*match = *node.Photo
+	}
+
+	axis := depth % dimensions
+
+	var ti uint8
+	var ni uint8
+
+	switch axis {
+	case r:
+		ti,_,_ = target.RGB255()
+		ni = node.Photo.AvgColor.R
+	case g:
+		_,ti,_ = target.RGB255()
+		ni = node.Photo.AvgColor.G
+	case b:
+		_,_,ti = target.RGB255()
+		ni = node.Photo.AvgColor.B
+		
+	}
+	leftSearched := true
+	if ti < ni {
+		nearestNeighborSearch(node.leftNode, depth+1, target, match, bestDistance)
+	} else {
+		nearestNeighborSearch(node.rightNode, depth+1, target, match, bestDistance)
+		leftSearched = false
+	}
+
+	if math.Abs(float64(ti)-float64(ni)) < *bestDistance {
+		if leftSearched {
+			nearestNeighborSearch(node.rightNode, depth+1, target, match, bestDistance)
+		} else {
+			nearestNeighborSearch(node.leftNode, depth+1, target, match, bestDistance)
+		}
+	}
+}
+
 func createNode(photos []db.Photo, depth int) *Node {
 
 	if len(photos) <= 0 {
@@ -77,35 +134,17 @@ func createNode(photos []db.Photo, depth int) *Node {
 	}
 
 	axis := depth % dimensions
-	median := getMedian(photos, axis)
-	left := createNode(photos[0:median.origIdx], depth+1)
-	right := createNode(photos[median.origIdx+1:], depth+1)
-
-	return &Node{Photo: median.photo, leftNode: left, rightNode: right}
-}
-
-func getMedian(photos []db.Photo, axis int) sample {
-	//estimating the median by taking a fixed number
-	//of randomly selected points and taking their median.  In this
-	//case the fixed number is 60% the length of the slice
-	rand.Seed(time.Now().UTC().UnixNano())
-	length := len(photos)
-	num := math.Ceil(0.6 * float64(length))
-	var samples []sample
-	for i := 0; i < int(num); i++ {
-		idx := rand.Intn(len(photos))
-		photo := photos[idx]
-		samples = append(samples, sample{&photo, idx})
-	}
-
 	switch axis {
 	case r:
-		sort.Sort(sortByRed(samples))
+		sort.Sort(sortByRed(photos))
 	case g:
-		sort.Sort(sortByGreen(samples))
+		sort.Sort(sortByGreen(photos))
 	case b:
-		sort.Sort(sortByBlue(samples))
+		sort.Sort(sortByBlue(photos))
 	}
+	median := len(photos) / 2
+	left := createNode(photos[0:median], depth+1)
+	right := createNode(photos[median+1:], depth+1)
 
-	return samples[len(samples)/2]
+	return &Node{Photo: &photos[median], leftNode: left, rightNode: right}
 }
