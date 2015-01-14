@@ -82,14 +82,14 @@ func (mosaicTiler *MosaicTiler) MakeTile(img *image.RGBA, sourceImgTile image.Im
 func (mosaicTiler *MosaicTiler) findClosestImage(sourceAvgColor colorful.Color) (db.Photo, image.Image, error) {
 
 	var photoUrl string
-	//matchedPhoto := mosaicTiler.tree.NearestNeighbour(sourceAvgColor)
-	matchedPhoto := linearSearch(mosaicTiler.photos, sourceAvgColor)
+	matchedPhoto := mosaicTiler.tree.NearestNeighbour(sourceAvgColor)
+	//matchedPhoto := linearSearch(mosaicTiler.photos, sourceAvgColor)
 	if matchedPhoto.ThumbUrl != "" {
-				photoUrl = matchedPhoto.ThumbUrl
-			} else {
-				photoUrl = matchedPhoto.Url
-			}
-	
+		photoUrl = matchedPhoto.ThumbUrl
+	} else {
+		photoUrl = matchedPhoto.Url
+	}
+
 	resp, err := http.Get(photoUrl)
 	if err != nil {
 		log.Printf("error retrieving picture from %s: %s\n", photoUrl, err)
@@ -110,7 +110,7 @@ func (mosaicTiler *MosaicTiler) Tiles() map[string]Tile {
 	return mosaicTiler.tiles
 }
 
-func linearSearch(photos []db.Photo, sourceAvgColor colorful.Color) (db.Photo) {
+func linearSearch(photos []db.Photo, sourceAvgColor colorful.Color) db.Photo {
 	var matchedPhoto db.Photo
 	minDistance := 1.0
 	for _, photo := range photos {
@@ -119,7 +119,7 @@ func linearSearch(photos []db.Photo, sourceAvgColor colorful.Color) (db.Photo) {
 		if distance < minDistance {
 			minDistance = distance
 			matchedPhoto = photo
-		
+
 		}
 	}
 	return matchedPhoto

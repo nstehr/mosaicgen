@@ -29,10 +29,7 @@ func (slice sortByRed) Len() int {
 }
 
 func (slice sortByRed) Less(i, j int) bool {
-	pureRed := colorful.Color{1.0, 0.0, 0.0}
-	ci := colorful.Color{float64(slice[i].AvgColor.R) / 255.0, 0.0, 0.0}
-	cj := colorful.Color{float64(slice[j].AvgColor.R) / 255.0, 0.0, 0.0}
-	return ci.DistanceCIE94(pureRed) > cj.DistanceCIE94(pureRed)
+	return slice[i].AvgColor.R < slice[j].AvgColor.R
 }
 
 func (slice sortByRed) Swap(i, j int) {
@@ -44,10 +41,7 @@ func (slice sortByGreen) Len() int {
 }
 
 func (slice sortByGreen) Less(i, j int) bool {
-	pureGreen := colorful.Color{0.0, 1.0, 0.0}
-	ci := colorful.Color{0.0, float64(slice[i].AvgColor.G) / 255.0, 0.0}
-	cj := colorful.Color{0.0, float64(slice[j].AvgColor.G) / 255.0, 0.0}
-	return ci.DistanceCIE94(pureGreen) > cj.DistanceCIE94(pureGreen)
+	return slice[i].AvgColor.G < slice[j].AvgColor.G
 }
 
 func (slice sortByGreen) Swap(i, j int) {
@@ -59,10 +53,7 @@ func (slice sortByBlue) Len() int {
 }
 
 func (slice sortByBlue) Less(i, j int) bool {
-	pureBlue := colorful.Color{0.0, 0.0, 1.0}
-	ci := colorful.Color{0.0, 0.0, float64(slice[i].AvgColor.B) / 255.0}
-	cj := colorful.Color{0.0, 0.0, float64(slice[j].AvgColor.B) / 255.0}
-	return ci.DistanceCIE94(pureBlue) > cj.DistanceCIE94(pureBlue)
+	return slice[i].AvgColor.B < slice[j].AvgColor.B
 }
 
 func (slice sortByBlue) Swap(i, j int) {
@@ -85,7 +76,7 @@ func nearestNeighborSearch(node *Node, depth int, target colorful.Color, match *
 		return
 	}
 	cc := colorful.Color{float64(node.Photo.AvgColor.R) / 255.0, float64(node.Photo.AvgColor.G) / 255.0, float64(node.Photo.AvgColor.B) / 255.0}
-	
+
 	distance := cc.DistanceCIE94(target)
 
 	if distance < *bestDistance {
@@ -100,15 +91,15 @@ func nearestNeighborSearch(node *Node, depth int, target colorful.Color, match *
 
 	switch axis {
 	case r:
-		ti,_,_ = target.RGB255()
+		ti, _, _ = target.RGB255()
 		ni = node.Photo.AvgColor.R
 	case g:
-		_,ti,_ = target.RGB255()
+		_, ti, _ = target.RGB255()
 		ni = node.Photo.AvgColor.G
 	case b:
-		_,_,ti = target.RGB255()
+		_, _, ti = target.RGB255()
 		ni = node.Photo.AvgColor.B
-		
+
 	}
 	leftSearched := true
 	if ti < ni {
